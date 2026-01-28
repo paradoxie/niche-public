@@ -6,19 +6,15 @@
 
 专为管理多个 AdSense/Affiliate 内容站点设计的 ERP 系统
 
-[English](#english) | [中文](#中文)
-
 </div>
 
 ---
 
-## 中文
-
-### 📖 项目简介
+## 📖 项目简介
 
 NicheStack Manager 帮助拥有多个内容站点的开发者/SEOer 解决"遗忘"痛点。一屏掌控代码维护状态、域名资产、AdSense 账号状态及外链建设记录。
 
-### ✨ 核心功能
+## ✨ 核心功能
 
 - 📊 **仪表盘** - 红绿灯机制快速识别需要关注的站点
 - 🚀 **项目管理** - 完整的项目生命周期管理
@@ -30,277 +26,134 @@ NicheStack Manager 帮助拥有多个内容站点的开发者/SEOer 解决"遗�
 - 🌍 **国际化** - 中英文界面
 - 🌓 **暗色模式**
 
-### 🛠️ 技术栈
+## 🛠️ 技术栈
 
 Next.js 15 + React 19 + TypeScript + Tailwind CSS 4 + Cloudflare D1 + Drizzle ORM
 
-### 🚀 快速开始
+## ☁️ 部署指南 (Cloudflare Pages)
 
-#### 1. 克隆项目
+> [!IMPORTANT]
+> **本项目专为 Cloudflare Pages 设计。**
+> 强烈建议使用 Cloudflare Pages 进行部署，以获得最佳的性能和免费额度体验。其他部署方式（如 Vercel）请自行测试。
 
-```bash
-git clone https://github.com/yourusername/nichestack-manager.git
-cd nichestack-manager
-npm install
-```
+### 1. 准备工作
 
-#### 2. 配置数据库
+确保你拥有：
+- GitHub 账号
+- Cloudflare 账号
+- Node.js 环境（仅用于执行数据库迁移命令）
 
-```bash
-# 创建 D1 数据库
-wrangler d1 create nichestack-db
+### 2. 获取代码
 
-# 会输出 database_id，复制它
-```
-
-编辑 `wrangler.toml`，替换 `database_id`：
-
-```toml
-[[d1_databases]]
-binding = "DB"
-database_name = "nichestack-db"
-database_id = "你的数据库ID"  # 粘贴这里
-```
-
-#### 3. 运行迁移
+将本项目 Fork 到你的 GitHub 账号，或者克隆到本地：
 
 ```bash
-# 本地开发
-wrangler d1 migrations apply nichestack-db --local
-
-# 生产环境
-wrangler d1 migrations apply nichestack-db --remote
+git clone https://github.com/paradoxie/niche-public.git
+cd niche-public
+npm install # 安装依赖以使用部署工具
 ```
 
-#### 4. 启动开发
+### 3. 创建与配置数据库
 
-```bash
-npm run dev
-```
+本项目使用 Cloudflare D1 数据库。
 
-访问 http://localhost:3000
+1.  **登录 Cloudflare** (如果未登录):
+    ```bash
+    npx wrangler login
+    ```
 
-### 📦 部署到 Cloudflare Pages
+2.  **创建数据库**:
+    ```bash
+    npx wrangler d1 create nichestack-db
+    ```
+    *复制命令输出中的 `database_id`。*
 
-**方式一：命令行部署**
+3.  **配置项目**:
+    打开 `wrangler.toml` 文件，将 `database_id` 替换为你刚才获取的 ID：
+    ```toml
+    [[d1_databases]]
+    binding = "DB"
+    database_name = "nichestack-db"
+    database_id = "你的数据库ID" # <--- 替换这里
+    ```
 
-```bash
-npm run pages:build
-wrangler pages deploy
-```
+4.  **初始化数据库表结构**:
+    ```bash
+    npx wrangler d1 migrations apply nichestack-db --remote
+    ```
+    *选择 `Yes` 确认执行。*
 
-**方式二：GitHub 自动部署（推荐）**
+### 4. 部署到 Cloudflare Pages
 
-1. 登录 [Cloudflare Dashboard](https://dash.cloudflare.com/)
-2. Workers & Pages → Create → Pages → Connect to Git
-3. 选择仓库，配置：
-   - Build command: `npm run pages:build`
-   - Build output: `.vercel/output/static`
-4. Settings → Functions → D1 database bindings：
-   - Variable name: `DB`
-   - D1 database: 选择你的数据库
+推荐使用 Cloudflare Dashboard 进行自动化部署：
 
-### 🔐 环境变量（可选）
+1.  登录 [Cloudflare Dashboard](https://dash.cloudflare.com/)。
+2.  进入 **Workers & Pages** -> **Create** -> **Pages** -> **Connect to Git**。
+3.  选择你 Fork 的 `niche-public` 仓库。
+4.  **配置构建设置**:
+    - **框架选择**: Next.js
+    - **Build command**: `npx @cloudflare/next-on-pages@1`
+    - **Build output directory**: `.vercel/output/static`
+5.  **配置环境变量与绑定** (关键步骤):
+    - 点击 **Environment variables (advanced)** (如有需要可设置 `ADMIN_PASSWORD` 等)。
+    - **极其重要**：部署完成后，进入该 Project 的 **Settings** -> **Functions** -> **D1 database bindings**。
+    - 点击 **Add binding**：
+        - **Variable name**: `DB` (必须完全一致)
+        - **D1 database**: 选择你在第3步创建的 `nichestack-db`。
+6.  **重新部署**:
+    绑定数据库后，需要手动触发一次 **Redeploy** (在 Deployments 标签页)，让绑定生效。
 
-在 Cloudflare Pages 设置中添加：
+### 5. 环境变量配置 (可选)
 
-| 变量 | 说明 | 必需 |
-|------|------|------|
-| `GITHUB_TOKEN` | GitHub Personal Access Token，用于同步仓库 | 否 |
-| `ADMIN_PASSWORD` | 简单密码保护 | 否 |
+在 Cloudflare Pages 的 **Settings** -> **Environment variables** 中可添加以下变量：
 
-#### 配置 GitHub 自动同步
+| 变量名 | 说明 | 是否必须 |
+| :--- | :--- | :--- |
+| `GITHUB_TOKEN` | 用于自动同步 GitHub 仓库的最后更新时间。<br>权限要求: `repo` (私有库) 或 `public_repo` (公开库)。 | 否 |
+| `ADMIN_PASSWORD` | 简易后的应用访问密码，防止未授权访问。 | 否 |
+| `CRON_SECRET` | 用于保护定时任务 API 的密钥 (任意字符串)。 | 否 |
 
-如果你的项目托管在 GitHub，可以配置自动同步代码更新时间：
+### 6. 配置定时自动同步 (可选)
 
-1. **创建 GitHub Token**
-   - 访问 https://github.com/settings/tokens
-   - 点击 "Generate new token (classic)"
-   - 选择权限：`repo`（私有仓库）或 `public_repo`（仅公开仓库）
-   - 生成并复制 token
+为了保持项目信息的实时性，可以配置定时任务自动同步 GitHub 仓库的更新时间。
 
-2. **添加 GitHub 账号**
-   - 在应用的"设置"页面添加 GitHub 账号
-   - 输入用户名和 token
-   - 系统会自动获取该账号下的仓库列表
+1.  **设置密钥**:
+    在 Cloudflare Pages 的环境变量中设置 `CRON_SECRET` (任意字符串)。
 
-3. **关联项目**
-   - 在项目编辑页面选择 GitHub 账号和仓库
-   - 点击"同步 GitHub"按钮即可更新最后推送时间
+2.  **注册账号**:
+    访问 [cron-job.org](https://console.cron-job.org/) 并注册账号。
 
-4. **配置定时自动同步（可选）**
-   - 在 Cloudflare Pages 环境变量中设置 `CRON_SECRET`（任意字符串）
-   - 访问 https://console.cron-job.org 注册账号
-   - 创建新任务：
-     - URL: `https://your-domain.pages.dev/api/sync-github`
-     - Method: `POST`
-     - Headers: `Authorization: Bearer YOUR_CRON_SECRET`
-     - Schedule: 每天一次（如 `0 2 * * *`）
-   - 系统会自动同步所有项目的 GitHub 仓库更新时间
+3.  **创建任务 (Create Cronjob)**:
+    - **Title**: NicheStack Sync (或任意名称)
+    - **URL**: `https://你的域名.pages.dev/api/sync-github`
+    - **Execution schedule**: 推荐每天一次 (例如 `Every day at 02:00`)
+    - **Advanced -> HTTP Method**: `POST`
+    - **Advanced -> HTTP Headers**:
+        ```
+        Authorization: Bearer 你的CRON_SECRET
+        ```
 
-### 📁 项目结构
-
-```
-src/
-├── app/              # Next.js 页面和 API
-├── components/       # React 组件
-├── db/              # 数据库 schema
-├── lib/             # 工具函数和 Server Actions
-└── i18n/            # 国际化
-```
-
-### 🤝 贡献
-
-欢迎提交 Issue 和 Pull Request！
-
-### 📄 开源协议
-
-MIT License
+4.  **保存**:
+    点击 "Create cronjob" 保存即可。系统将按计划自动触发同步。
 
 ---
 
-## English
-
-### 📖 Introduction
-
-NicheStack Manager helps developers/SEOers managing multiple content sites solve the "forgetting" problem. Monitor code status, domain assets, AdSense accounts, and backlinks in one screen.
-
-### ✨ Features
-
-- 📊 **Dashboard** - Traffic light system for quick health checks
-- 🚀 **Project Management** - Complete lifecycle management
-- 🔗 **Backlink Tracking** - Record and track backlinks with costs
-- 💰 **Expense Tracking** - Manage expenses with expiry reminders
-- 📚 **Resource Library** - Collect backlink sources and SEO tools
-- 📈 **Analytics** - Visualize key metrics
-- 🔄 **GitHub Sync** - Auto-sync repository updates
-- 🌍 **i18n** - English and Chinese
-- 🌓 **Dark Mode**
-
-### 🛠️ Tech Stack
-
-Next.js 15 + React 19 + TypeScript + Tailwind CSS 4 + Cloudflare D1 + Drizzle ORM
-
-### 🚀 Quick Start
-
-#### 1. Clone & Install
-
-```bash
-git clone https://github.com/yourusername/nichestack-manager.git
-cd nichestack-manager
-npm install
-```
-
-#### 2. Setup Database
-
-```bash
-# Create D1 database
-wrangler d1 create nichestack-db
-
-# Copy the database_id from output
-```
-
-Edit `wrangler.toml` and replace `database_id`:
-
-```toml
-[[d1_databases]]
-binding = "DB"
-database_name = "nichestack-db"
-database_id = "your-database-id"  # Paste here
-```
-
-#### 3. Run Migrations
-
-```bash
-# Local development
-wrangler d1 migrations apply nichestack-db --local
-
-# Production
-wrangler d1 migrations apply nichestack-db --remote
-```
-
-#### 4. Start Development
-
-```bash
-npm run dev
-```
-
-Visit http://localhost:3000
-
-### 📦 Deploy to Cloudflare Pages
-
-**Option 1: CLI Deploy**
-
-```bash
-npm run pages:build
-wrangler pages deploy
-```
-
-**Option 2: GitHub Auto-Deploy (Recommended)**
-
-1. Login to [Cloudflare Dashboard](https://dash.cloudflare.com/)
-2. Workers & Pages → Create → Pages → Connect to Git
-3. Select repository, configure:
-   - Build command: `npm run pages:build`
-   - Build output: `.vercel/output/static`
-4. Settings → Functions → D1 database bindings:
-   - Variable name: `DB`
-   - D1 database: Select your database
-
-### 🔐 Environment Variables (Optional)
-
-Add in Cloudflare Pages settings:
-
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `GITHUB_TOKEN` | GitHub Personal Access Token for repo sync | No |
-| `ADMIN_PASSWORD` | Simple password protection | No |
-
-#### Setup GitHub Auto-Sync
-
-If your projects are hosted on GitHub, you can configure automatic code update tracking:
-
-1. **Create GitHub Token**
-   - Visit https://github.com/settings/tokens
-   - Click "Generate new token (classic)"
-   - Select scopes: `repo` (private repos) or `public_repo` (public only)
-   - Generate and copy the token
-
-2. **Add GitHub Account**
-   - Go to Settings page in the app
-   - Add your GitHub account with username and token
-   - System will automatically fetch your repositories
-
-3. **Link Projects**
-   - In project edit page, select GitHub account and repository
-   - Click "Sync GitHub" button to update last push time
-
-4. **Setup Automatic Sync (Optional)**
-   - Set `CRON_SECRET` in Cloudflare Pages environment variables (any random string)
-   - Register at https://console.cron-job.org
-   - Create new job:
-     - URL: `https://your-domain.pages.dev/api/sync-github`
-     - Method: `POST`
-     - Headers: `Authorization: Bearer YOUR_CRON_SECRET`
-     - Schedule: Daily (e.g., `0 2 * * *`)
-   - System will automatically sync all projects' GitHub repository update times
-
-### 📁 Project Structure
+## 📁 项目结构
 
 ```
 src/
-├── app/              # Next.js pages and APIs
-├── components/       # React components
-├── db/              # Database schema
-├── lib/             # Utils and Server Actions
-└── i18n/            # Internationalization
+├── app/              # Next.js 页面和 API 路由
+├── components/       # React UI 组件
+├── db/               # 数据库 Schema 定义
+├── lib/              # 工具函数和 Server Actions
+└── i18n/             # 国际化资源
 ```
 
-### 🤝 Contributing
+## 🤝 贡献
 
-Issues and Pull Requests are welcome!
+欢迎提交 Issue 和 Pull Request！
 
-### 📄 License
+## 📄 开源协议
 
 MIT License
 
