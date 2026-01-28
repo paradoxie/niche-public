@@ -1,0 +1,1 @@
+ALTER TABLE `projects` ADD `domain_purchase_date` integer;

@@ -1,0 +1,1 @@
+ALTER TABLE `projects` ADD `last_manual_update` integer;
